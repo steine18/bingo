@@ -19,8 +19,8 @@ def db_entry(casino, datetime, dollar):
         pass
 
 
-def update_cashball():
-    r = requests.get('http://www.fiestacasinobingo.com')
+def update_fiesta(casino_url):
+    r = requests.get(casino_url)
     soup = BeautifulSoup(r.content, 'html.parser')
     now = datetime.now()
     for row in range(2, 11):
@@ -41,5 +41,30 @@ def update_cashball():
         except ValueError:
             pass
 
+def update_stations(casino_url):
+    r = requests.get(casino_url)
+    soup = BeautifulSoup(r.content, 'html.parser')
+    now = datetime.now()
+    all_games = soup.table.find_all('tr')
+    casinos = all_games[0].find_all('td')
+    casino_col = {}
+    for i in range(1,len(casinos)):
+        casino_col[i] = casinos[i].get_text().lower()
+    for row in range(1, 8):
+        game = all_games[row]
+        time = datetime.strptime(game.find_all('td')[0].get_text(), '%I%p')
+        time = f'{str(now.date())} {str(time.time())}'
+        time = datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
+        if time >= now:
+            time = time - timedelta(days=1)
+        for i in range(1,8):
+            try:
+                dollar = int(re.sub('[^0-9]', '', game.find_all('td')[i].get_text()))
+                casino = casino_col[i]
+                db_entry(casino, time, dollar)
+            except ValueError:
+                pass
 
-update_cashball()
+
+update_fiesta('http://www.fiestacasinobingo.com')
+update_stations('http://www.stationcasinosbingo.com/')
