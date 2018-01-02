@@ -11,17 +11,19 @@ def db_entry(casino, datetime, dollar):
                                      (Cashball.datetime == str(datetime)) &
                                      (Cashball.dollar == int(dollar))))
     if len(query) == 0:
-        entry = Cashball(casino = casino, datetime = datetime, dollar = dollar)
+        entry = Cashball(casino=casino, datetime=datetime, dollar=dollar, record_time=str(datetime.now()))
         entry.save()
         print('Save')
     else:
         print('Done')
         pass
+
+
 def update_cashball():
     r = requests.get('http://www.fiestacasinobingo.com')
     soup = BeautifulSoup(r.content, 'html.parser')
     now = datetime.now()
-    for row in range(2,11):
+    for row in range(2, 11):
         game = soup.table.find_all('tr')[row]
         time = datetime.strptime(game.find_all('td')[0].get_text(), '%I%p')
         time = f'{str(now.date())} {str(time.time())}'
@@ -39,5 +41,5 @@ def update_cashball():
         except ValueError:
             pass
 
-cashball = update_cashball()
 
+update_cashball()
